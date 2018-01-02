@@ -51,6 +51,20 @@ public class MonsterMusicController {
         return result;
     }
 
+    public String musicUrl(String id){
+        String url = "http://music.163.com/weapi/song/enhance/player/url?csrf_token=";
+        HttpHeaders headers =  new HttpHeaders();
+        headers.set("Origin", "http://music.163.com");
+        headers.set("Referer", "http://music.163.com/");
+        headers.set("Charset", "UTF-8");
+        headers.set("Accept-Language", "q=0.8,zh-CN;q=0.6,zh;q=0.2");
+        headers.set("Cookie", "os=uwp;");
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        String first_param = "{\"ids\":\"[" + id + "]\",\"br\":192000" + ",\"csrf_token\":\"\"}";
+
+        return null;
+    }
+
 
 
 }
