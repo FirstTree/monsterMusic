@@ -1,7 +1,10 @@
 package com.wenyiguai.monstermusic.controller;
 
 import com.sun.istack.internal.Nullable;
+import com.wenyiguai.monstermusic.utils.AES;
 import lombok.Builder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -14,12 +17,19 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.BufferedInputStream;
+import java.io.DataOutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+
 /**
  * Create by FirsTree on 2017/12/28
  */
 @Controller
 @RequestMapping(value = "/mosterMusic")
 public class MonsterMusicController {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private RestTemplate restTemplate;
@@ -35,12 +45,14 @@ public class MonsterMusicController {
         MultiValueMap<String, String> params= new LinkedMultiValueMap<String, String>();
         params.add("s", keywords);
         params.add("limit", count);
+        params.add("type", "1");
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<MultiValueMap<String, String>>(params, headers);
         String result = restTemplate.postForObject(url, requestEntity, String.class);
         return result;
     }
 
-    @RequestMapping(value = "lyric", method = RequestMethod.GET)
+    @RequestMapping(value = "/lyric", method = RequestMethod.GET)
+    @ResponseBody
     public String lyric(String id){
         String url  = "http://music.163.com/api/song/lyric?id="+ id + "&lv=-1";
         HttpHeaders headers =  new HttpHeaders();
@@ -51,20 +63,59 @@ public class MonsterMusicController {
         return result;
     }
 
+    @RequestMapping(value = "/musicUrl", method = RequestMethod.POST)
+    @ResponseBody
     public String musicUrl(String id){
-        String url = "http://music.163.com/weapi/song/enhance/player/url?csrf_token=";
-        HttpHeaders headers =  new HttpHeaders();
-        headers.set("Origin", "http://music.163.com");
-        headers.set("Referer", "http://music.163.com/");
-        headers.set("Charset", "UTF-8");
-        headers.set("Accept-Language", "q=0.8,zh-CN;q=0.6,zh;q=0.2");
-        headers.set("Cookie", "os=uwp;");
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        String first_param = "{\"ids\":\"[" + id + "]\",\"br\":192000" + ",\"csrf_token\":\"\"}";
-
-        return null;
+        String response = null;
+        try {
+            String url = "http://music.163.com/weapi/song/enhance/player/url?csrf_token=";
+            HttpHeaders headers =  new HttpHeaders();
+            headers.set("Origin", "http://music.163.com");
+            headers.set("Referer", "http://music.163.com/");
+            headers.set("Charset", "UTF-8");
+            headers.set("Accept-Language", "q=0.8,zh-CN;q=0.6,zh;q=0.2");
+            headers.set("Cookie", "os=uwp;");
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            String first_param = "{\"ids\":\"[" + id + "]\",\"br\":192000" + ",\"csrf_token\":\"\"}";
+            response =  getResponse( url,"params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return response;
     }
 
-
+    private String getResponse( String uri , String param) {
+        String response = null;
+        try {
+            URL url = new URL(uri);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Referer", "http://music.163.com/");
+            conn.setRequestProperty("Host", "music.163.com");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setRequestProperty("Charset", "UTF-8");
+            conn.setRequestProperty("Accept-Language", "q=0.8,zh-CN;q=0.6,zh;q=0.2");
+            conn.setRequestProperty("Cookie", "os=uwp;");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.connect();
+            DataOutputStream outputStream = new DataOutputStream(conn.getOutputStream());
+            outputStream.write(param.getBytes());
+            outputStream.flush();
+            outputStream.close();
+            BufferedInputStream inputStream = new BufferedInputStream(conn.getInputStream());
+            byte[] bytes = new byte[512];
+            int len = -1;
+            StringBuilder sb = new StringBuilder();
+            while ((len = inputStream.read(bytes)) != -1) {
+                sb.append(new String(bytes, 0, len));
+            }
+            inputStream.close();
+            response = sb.toString();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
+        return response;
+    }
 
 }
