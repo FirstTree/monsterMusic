@@ -1,17 +1,12 @@
 package com.wenyiguai.monstermusic.controller;
 
-import com.sun.istack.internal.Nullable;
 import com.wenyiguai.monstermusic.utils.AES;
-import lombok.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -27,28 +22,43 @@ import java.net.URLEncoder;
  * Create by FirsTree on 2017/12/28
  */
 @Controller
-@RequestMapping(value = "/mosterMusic")
+@RequestMapping(value = "/monsterMusic")
 public class MonsterMusicController {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private RestTemplate restTemplate;
 
+//    @RequestMapping(value = "/search", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String search(String keywords, @Nullable String count, @Nullable String page){
+//        String url = "http://music.163.com/api/search/suggest/web";
+//        HttpHeaders headers =  new HttpHeaders();
+//        headers.set("Origin", "http://music.163.com");
+//        headers.set("Referer", "http://music.163.com/");
+//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+//        MultiValueMap<String, String> params= new LinkedMultiValueMap<String, String>();
+//        params.add("s", keywords);
+//        params.add("limit", count);
+//        params.add("type", "1");
+//        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<MultiValueMap<String, String>>(params, headers);
+//        String result = restTemplate.postForObject(url, requestEntity, String.class);
+//        return result;
+//    }
+
     @RequestMapping(value = "/search", method = RequestMethod.GET)
     @ResponseBody
-    public String search(String keywords, @Nullable String count, @Nullable String page){
-        String url = "http://music.163.com/api/search/suggest/web";
-        HttpHeaders headers =  new HttpHeaders();
-        headers.set("Origin", "http://music.163.com");
-        headers.set("Referer", "http://music.163.com/");
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        MultiValueMap<String, String> params= new LinkedMultiValueMap<String, String>();
-        params.add("s", keywords);
-        params.add("limit", count);
-        params.add("type", "1");
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<MultiValueMap<String, String>>(params, headers);
-        String result = restTemplate.postForObject(url, requestEntity, String.class);
-        return result;
+    public String search(String s, Integer pages, Integer limit){
+        String response = null;
+        try {
+            String url = "http://music.163.com/weapi/search/get?csrf_token=";
+            String first_param = "{\"s\":\"" + s + "\",\"type\":\"1\"" + ",\"limit\":\"" + limit + "\",\"offset\":\"" + limit*(pages - 1) +  "\",\"csrf_token\":\"\"}";
+            response =  getResponse( url,"params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey());
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            response = e.getMessage();
+        }
+        return response;
     }
 
     @RequestMapping(value = "/lyric", method = RequestMethod.GET)
@@ -63,23 +73,33 @@ public class MonsterMusicController {
         return result;
     }
 
-    @RequestMapping(value = "/musicUrl", method = RequestMethod.POST)
+    @RequestMapping(value = "/musicUrl", method = RequestMethod.GET)
     @ResponseBody
     public String musicUrl(String id){
         String response = null;
         try {
             String url = "http://music.163.com/weapi/song/enhance/player/url?csrf_token=";
-            HttpHeaders headers =  new HttpHeaders();
-            headers.set("Origin", "http://music.163.com");
-            headers.set("Referer", "http://music.163.com/");
-            headers.set("Charset", "UTF-8");
-            headers.set("Accept-Language", "q=0.8,zh-CN;q=0.6,zh;q=0.2");
-            headers.set("Cookie", "os=uwp;");
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             String first_param = "{\"ids\":\"[" + id + "]\",\"br\":192000" + ",\"csrf_token\":\"\"}";
             response =  getResponse( url,"params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey());
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error(e.getMessage());
+            response = e.getMessage();
+        }
+        return response;
+    }
+
+    @RequestMapping(value = "/playlist", method = RequestMethod.POST)
+    @ResponseBody
+    public String playList(String id){
+        String response = null;
+        try {
+            String url = "http://music.163.com/weapi/v3/playlist/detail?csrf_token=";
+            String first_param = "{\"id\":" + id + ",\"offset\":0" + ",\"total\":true" + ",\"limit\":1000" + ",\"n\":1000" + ",\"csrf_token\":\"\"}";
+//            String first_param = "{\"id\":\"" + id + "\",\"offset\":\"0\"" + ",\"total\":\"True\"" + ",\"limit\":\"1000\"" + ",\"n\":\"1000\"" + ",\"csrf_token\":\"\"}";
+            response = getResponse(url, "params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey());
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            response = e.getMessage();
         }
         return response;
     }

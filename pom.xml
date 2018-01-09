@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.wenyiguai</groupId>
-	<artifactId>moster-music</artifactId>
+	<artifactId>monster-music</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>moster-music</name>
-	<description>Moster-Music U Know</description>
+	<name>monster-music</name>
+	<description>Monster-Music U Know</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
