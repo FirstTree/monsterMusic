@@ -1,6 +1,7 @@
 package com.wenyiguai.monstermusic.controller;
 
 import com.wenyiguai.monstermusic.utils.AES;
+import com.wenyiguai.monstermusic.utils.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ public class MonsterMusicController {
 
     @Autowired
     private RestTemplate restTemplate;
-
+    private Util util = new Util();
 //    @RequestMapping(value = "/search", method = RequestMethod.GET)
 //    @ResponseBody
 //    public String search(String keywords, @Nullable String count, @Nullable String page){
@@ -53,7 +54,8 @@ public class MonsterMusicController {
         try {
             String url = "http://music.163.com/weapi/search/get?csrf_token=";
             String first_param = "{\"s\":\"" + s + "\",\"type\":\"1\"" + ",\"limit\":\"" + limit + "\",\"offset\":\"" + limit*(pages - 1) +  "\",\"csrf_token\":\"\"}";
-            response =  getResponse( url,"params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey());
+            String params = "params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey();
+            response =  getResponse( url, params);
         }catch (Exception e){
             logger.error(e.getMessage());
             response = e.getMessage();
@@ -80,7 +82,8 @@ public class MonsterMusicController {
         try {
             String url = "http://music.163.com/weapi/song/enhance/player/url?csrf_token=";
             String first_param = "{\"ids\":\"[" + id + "]\",\"br\":192000" + ",\"csrf_token\":\"\"}";
-            response =  getResponse( url,"params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey());
+            String params = "params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey();
+            response =  util.createWebAPIRequest( url, params);
         }catch (Exception e){
             logger.error(e.getMessage());
             response = e.getMessage();
@@ -95,8 +98,8 @@ public class MonsterMusicController {
         try {
             String url = "http://music.163.com/weapi/v3/playlist/detail?csrf_token=";
             String first_param = "{\"id\":" + id + ",\"offset\":0" + ",\"total\":true" + ",\"limit\":1000" + ",\"n\":1000" + ",\"csrf_token\":\"\"}";
-//            String first_param = "{\"id\":\"" + id + "\",\"offset\":\"0\"" + ",\"total\":\"True\"" + ",\"limit\":\"1000\"" + ",\"n\":\"1000\"" + ",\"csrf_token\":\"\"}";
-            response = getResponse(url, "params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey());
+            String params = "params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey();
+            response = util.createWebAPIRequest(url, params);
         }catch (Exception e){
             logger.error(e.getMessage());
             response = e.getMessage();
