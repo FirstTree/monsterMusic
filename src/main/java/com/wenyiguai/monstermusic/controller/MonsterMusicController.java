@@ -13,10 +13,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.BufferedInputStream;
-import java.io.DataOutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 
 /**
@@ -30,22 +26,6 @@ public class MonsterMusicController {
     @Autowired
     private RestTemplate restTemplate;
     private Util util = new Util();
-//    @RequestMapping(value = "/search", method = RequestMethod.GET)
-//    @ResponseBody
-//    public String search(String keywords, @Nullable String count, @Nullable String page){
-//        String url = "http://music.163.com/api/search/suggest/web";
-//        HttpHeaders headers =  new HttpHeaders();
-//        headers.set("Origin", "http://music.163.com");
-//        headers.set("Referer", "http://music.163.com/");
-//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-//        MultiValueMap<String, String> params= new LinkedMultiValueMap<String, String>();
-//        params.add("s", keywords);
-//        params.add("limit", count);
-//        params.add("type", "1");
-//        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<MultiValueMap<String, String>>(params, headers);
-//        String result = restTemplate.postForObject(url, requestEntity, String.class);
-//        return result;
-//    }
 
     @RequestMapping(value = "/search", method = RequestMethod.GET)
     @ResponseBody
@@ -55,7 +35,7 @@ public class MonsterMusicController {
             String url = "http://music.163.com/weapi/search/get?csrf_token=";
             String first_param = "{\"s\":\"" + s + "\",\"type\":\"1\"" + ",\"limit\":\"" + limit + "\",\"offset\":\"" + limit*(pages - 1) +  "\",\"csrf_token\":\"\"}";
             String params = "params=" + URLEncoder.encode(AES.get_params(first_param), "UTF-8") + "&encSecKey=" + AES.get_encSecKey();
-            response =  getResponse( url, params);
+            response = util.createWebAPIRequest(url, params);
         }catch (Exception e){
             logger.error(e.getMessage());
             response = e.getMessage();
@@ -91,7 +71,7 @@ public class MonsterMusicController {
         return response;
     }
 
-    @RequestMapping(value = "/playlist", method = RequestMethod.POST)
+    @RequestMapping(value = "/playlist/detail", method = RequestMethod.POST)
     @ResponseBody
     public String playList(String id){
         String response = null;
@@ -107,36 +87,17 @@ public class MonsterMusicController {
         return response;
     }
 
-    private String getResponse( String uri , String param) {
+    @RequestMapping(value = "/playlist/highquality")
+    public String playListHighquality(Integer pages, Integer limit){
         String response = null;
         try {
-            URL url = new URL(uri);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Referer", "http://music.163.com/");
-            conn.setRequestProperty("Host", "music.163.com");
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            conn.setRequestProperty("Charset", "UTF-8");
-            conn.setRequestProperty("Accept-Language", "q=0.8,zh-CN;q=0.6,zh;q=0.2");
-            conn.setRequestProperty("Cookie", "os=uwp;");
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            conn.connect();
-            DataOutputStream outputStream = new DataOutputStream(conn.getOutputStream());
-            outputStream.write(param.getBytes());
-            outputStream.flush();
-            outputStream.close();
-            BufferedInputStream inputStream = new BufferedInputStream(conn.getInputStream());
-            byte[] bytes = new byte[512];
-            int len = -1;
-            StringBuilder sb = new StringBuilder();
-            while ((len = inputStream.read(bytes)) != -1) {
-                sb.append(new String(bytes, 0, len));
-            }
-            inputStream.close();
-            response = sb.toString();
+            String url = "http://music.163.com/weapi/playlist/highquality/list";
+            String first_param = "{cat:全部,offset:"+(pages-1)*limit + ",limit:" + limit + "csrf_token:''}";
+            String params = "params=" + URLEncoder.encode(AES.get_params(first_param),"UTF-8") + "&encSecKey" + AES.get_encSecKey();
+            response = util.createWebAPIRequest(url,params);
         }catch (Exception e){
             logger.error(e.getMessage());
+            response = e.getMessage();
         }
         return response;
     }
