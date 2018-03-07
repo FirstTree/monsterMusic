@@ -71,7 +71,7 @@ public class MonsterMusicController {
         return response;
     }
 
-    @RequestMapping(value = "/playlist/detail", method = RequestMethod.POST)
+    @RequestMapping(value = "/playlist/detail", method = RequestMethod.GET)
     @ResponseBody
     public String playList(String id){
         String response = null;
